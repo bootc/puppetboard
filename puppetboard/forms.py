@@ -1,6 +1,12 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
+try:
+    import pypuppetdbquery
+    has_pypuppetdbquery = True
+except ImportError:
+    has_pypuppetdbquery = False
+
 from flask.ext.wtf import Form
 from wtforms import (
     HiddenField, RadioField, SelectField,
@@ -13,7 +19,7 @@ class QueryForm(Form):
     PuppetDB."""
     query = TextAreaField('Query', [validators.Required(
         message='A query is required.')])
-    endpoints = RadioField('API endpoint', choices=[
+    endpoint_choices=[
         ('nodes', 'Nodes'),
         ('resources', 'Resources'),
         ('facts', 'Facts'),
@@ -26,7 +32,10 @@ class QueryForm(Form):
         ('edges', 'Edges'),
         ('environments', 'Environments'),
         ('pql', 'PQL'),
-        ])
+    ]
+    if has_pypuppetdbquery:
+        endpoint_choices.append(('query', 'Query'))
+    endpoints = RadioField('API endpoint', choices=endpoint_choices)
     rawjson = BooleanField('Raw JSON')
 
 class CatalogForm(Form):

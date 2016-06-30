@@ -7,6 +7,10 @@ try:
     from urllib import unquote
 except ImportError:
     from urllib.parse import unquote
+try:
+    import pypuppetdbquery
+except ImportError:
+    pass
 from datetime import datetime
 from itertools import tee
 
@@ -734,15 +738,19 @@ def query(env):
             'csrf_secret': app.config['SECRET_KEY'],
             'csrf_context': session})
         if form.validate_on_submit():
+            endpoint = form.endpoints.data
             if form.endpoints.data == 'pql':
                 query = form.query.data
+            elif form.endpoints.data == 'query':
+                query = pypuppetdbquery.parse(form.query.data)
+                endpoint = 'nodes'
             elif form.query.data[0] == '[':
                 query = form.query.data
             else:
                 query = '[{0}]'.format(form.query.data)
             result = get_or_abort(
                 puppetdb._query,
-                form.endpoints.data,
+                endpoint,
                 query=query)
             return render_template('query.html',
                 form=form,
